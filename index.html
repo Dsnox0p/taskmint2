@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#09070f">
+<title>TaskMint</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#09070f;color:#fff;font-family:Arial,sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px 90px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.logo{font-size:25px;font-weight:800}.logo span,.reward,.balance{color:#ffd21c}
+.card{background:linear-gradient(145deg,#191327,#100c18);border:1px solid #292037;border-radius:20px;padding:20px;margin-bottom:14px}
+.balance{font-size:36px;font-weight:800;margin:8px 0}.muted{color:#9d96aa;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:#15101e;border-radius:14px;padding:13px;text-align:center}.stat b{display:block;font-size:18px;margin-bottom:4px}
+button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15px}.primary{background:#ffd21c;color:#15110a}.secondary{background:#211a2d;color:#fff;border:1px solid #34294a}
+.row{display:flex;gap:10px}.row button{flex:1}.page{display:none}.page.active{display:block}
+.task{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#15101e;border-radius:16px;padding:14px;margin:10px 0}.task .info{flex:1}.task button{width:auto;padding:10px 14px}
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:auto;background:#100c17ee;border-top:1px solid #292037;display:grid;grid-template-columns:repeat(4,1fr);padding:8px}
+.nav button{background:transparent;color:#777080;padding:8px 4px;font-size:12px}.nav button.active{color:#ffd21c}
+.icon{font-size:20px;display:block}input{width:100%;padding:14px;border-radius:13px;border:1px solid #34294a;background:#100c18;color:#fff;outline:none;margin:8px 0}
+.notice{padding:12px;border-radius:13px;background:#211a2d;color:#c8c1d2;font-size:13px}
+</style></head>
+<body>
+<div class="app">
+<div class="top"><div class="logo">Task<span>Mint</span></div><div class="muted" id="userName">Telegram</div></div>
+
+<section id="home" class="page active"><div class="card">
+<div class="muted">Available Balance</div><div class="balance" id="balance">₹0</div>
+<div class="row"><button class="primary" onclick="showPage('earn')">▶ Watch & Earn</button><button class="secondary" onclick="showPage('withdraw')">Withdraw</button></div>
+</div><div class="stats"><div class="stat"><b id="earned">₹0</b><span class="muted">Earned</span></div><div class="stat"><b id="ads">0</b><span class="muted">Ads</span></div><div class="stat"><b id="refs">0</b><span class="muted">Referrals</span></div></div>
+<div class="card"><h3>Today's Tasks</h3><div id="homeTasks" class="muted">Loading...</div></div></section>
+
+<section id="tasks" class="page"><div class="card"><h2>Tasks</h2><div class="muted">Complete genuine Telegram tasks to earn.</div><div id="taskList"></div></div></section>
+
+<section id="earn" class="page"><div class="card"><h2>Earn More</h2><p class="muted">Reward is added only after the ad provider confirms completion.</p>
+<button class="primary" onclick="watchAd()">▶ Watch Rewarded Ad</button>
+<div class="notice" style="margin-top:12px">Real-money rewards must be verified by the ad provider and backend.</div></div></section>
+
+<section id="refer" class="page"><div class="card"><h2>Refer & Earn</h2><div class="balance" id="refCount">0</div><div class="muted">Successful referrals</div><input id="refLink" readonly><button class="primary" onclick="shareRef()">Share Referral</button></div></section>
+
+<section id="withdraw" class="page"><div class="card"><h2>Withdraw</h2><div class="muted">Minimum withdrawal: ₹850</div><input id="upi" placeholder="Enter UPI ID"><button class="primary" onclick="withdraw()">Request Withdrawal</button></div></section>
+</div>
+
+<nav class="nav"><button id="n-home" class="active" onclick="showPage('home')"><span class="icon">⌂</span>Home</button><button id="n-tasks" onclick="showPage('tasks')"><span class="icon">✓</span>Tasks</button><button id="n-earn" onclick="showPage('earn')"><span class="icon">▶</span>Earn</button><button id="n-refer" onclick="showPage('refer')"><span class="icon">↗</span>Refer</button></nav>
+
+<script>
+const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand();}
+const user=tg?.initDataUnsafe?.user;const uid=user?.id||'demo';
+document.getElementById('userName').textContent=user?.first_name||'Telegram';
+const state=JSON.parse(localStorage.getItem('taskmint_'+uid)||'{"balance":0,"earned":0,"ads":0,"refs":0}');
+function render(){balance.textContent='₹'+state.balance;earned.textContent='₹'+state.earned;ads.textContent=state.ads;refs.textContent=state.refs;refCount.textContent=state.refs;refLink.value='https://t.me/TaskMeent_bot?start=ref_'+uid}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(p).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.getElementById('n-'+p)?.classList.add('active')}
+function watchAd(){alert('AdsGram SDK + backend reward verification will be connected next.')}
+function shareRef(){let x=refLink.value;if(navigator.share)navigator.share({title:'TaskMint',text:'Join TaskMint',url:x});else navigator.clipboard?.writeText(x).then(()=>alert('Referral link copied!'))}
+function withdraw(){if(state.balance<850)return alert('Minimum withdrawal is ₹850.');if(!upi.value.trim())return alert('UPI ID enter karo.');alert('Backend payout connection is required before real withdrawal.')}
+document.getElementById('taskList').innerHTML='<div class="task"><div class="info"><b>Telegram Channel Task</b><br><span class="reward">+₹10</span></div><button class="secondary" onclick="alert('Real Telegram membership verification backend se connect hogi.')">Open</button></div>';
+homeTasks.textContent='1 task available';render();
+</script></body></html>
